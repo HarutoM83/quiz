@@ -59,13 +59,13 @@ public class Question : MonoBehaviour
 
         QuizData quiz = quizList[index];
 
-        Debug.Log(quiz.question);
+        Debug.Log(quiz.question);//テキストで変更
 
         for (int i = 0; i < 4; i++)
         {
-            Debug.Log($"{i + 1}: {quiz.choices[i]}");
+            Debug.Log($"{i + 1}: {quiz.choices[i]}");//テキストなどで変更
         }
 
-        Debug.Log($"正解は {quiz.correctAnswer}");
+        Debug.Log($"正解は {quiz.correctAnswer}");//テキストで変更
     }
 }
