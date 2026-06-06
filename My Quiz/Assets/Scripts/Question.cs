@@ -14,9 +14,16 @@ public class Question : MonoBehaviour
     public Text[] choiceTexts;
     QuizData currentQuiz;
     public GameObject resultCanvas;
+    public GameObject finalCanvas;
+    public Text finalText;
 
     public Text resultText;
     public Text explanationText;
+
+    int currentIndex = 0;
+    int score = 0;
+    int totalQuestions = 0;
+    int correctCount = 0;
 
     void Start()
     {
@@ -27,6 +34,7 @@ public class Question : MonoBehaviour
             Debug.LogError("CSVが見つかりません");
             return;
         }
+        Shuffle(quizList);
 
         StringReader reader = new StringReader(csvFile.text);
 
@@ -63,13 +71,21 @@ public class Question : MonoBehaviour
 
         ShowRandomQuestion();
     }
+    void Shuffle(List<QuizData> list)
+    {
+        for (int i = 0; i < list.Count; i++)
+        {
+            int rand = Random.Range(i, list.Count);
+            QuizData temp = list[i];
+            list[i] = list[rand];
+            list[rand] = temp;
+        }
+    }
 
     void ShowRandomQuestion()
     {
-        int index = Random.Range(0, quizList.Count);
 
-        QuizData quiz = quizList[index];
-
+        QuizData quiz = quizList[currentIndex];
         currentQuiz = quiz;
         questionText.text = quiz.question;//テキストで変更
 
@@ -77,11 +93,14 @@ public class Question : MonoBehaviour
         {
             choiceTexts[i].text= quiz.choices[i];//テキストなどで変更
         }
+        currentIndex++;
     }
     public void Answer(int choiceIndex)
     {
         Debug.Log("Answer呼ばれた");
         bool isCorrect = choiceIndex == currentQuiz.correctAnswer;
+
+        totalQuestions++;
 
         quizCanvas.SetActive(false);
         resultCanvas.SetActive(true);
@@ -90,6 +109,7 @@ public class Question : MonoBehaviour
 
         if (isCorrect)
         {
+            correctCount++;
             resultText.text = "正解！";
         }
         else
@@ -104,9 +124,26 @@ public class Question : MonoBehaviour
 
     public void NextQuestion()
     {
+        if (currentIndex >= quizList.Count)
+        {
+            ShowFinalResult();
+            return;
+        }
         quizCanvas.SetActive(true);
         resultCanvas.SetActive(false);
+        finalCanvas.SetActive(false);
 
         ShowRandomQuestion();
+    }
+    void ShowFinalResult()
+    {
+        quizCanvas.SetActive(false);
+        resultCanvas.SetActive(false);
+        finalCanvas.SetActive(true);
+
+        float accuracy = (float)correctCount / totalQuestions * 100f;
+
+        finalText.text =
+            $"終了！\n\n正解数：{correctCount}/{totalQuestions}\n正答率：{accuracy:F1}%";
     }
 }
