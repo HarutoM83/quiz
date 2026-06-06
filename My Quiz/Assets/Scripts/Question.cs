@@ -20,12 +20,128 @@ public class Question : MonoBehaviour
     public Text resultText;
     public Text explanationText;
 
-    int currentIndex = 0;
-    int score = 0;
     int totalQuestions = 0;
     int correctCount = 0;
+    int questionNumber = 0;
 
     void Start()
+    {
+        quizCanvas.SetActive(true);
+        resultCanvas.SetActive(false);
+        finalCanvas.SetActive(false);
+
+        LoadCSV();
+        Shuffle(quizList);
+
+        ShowRandomQuestion();
+    }
+    void Shuffle(List<QuizData> list)
+    {
+        for (int i = 0; i < list.Count; i++)
+        {
+            int rand = Random.Range(i, list.Count);
+            QuizData temp = list[i];
+            list[i] = list[rand];
+            list[rand] = temp;
+        }
+    }
+
+    void ShowRandomQuestion()
+    {
+        questionNumber++;
+        if (quizList.Count == 0)
+        {
+            ShowFinalResult();
+            return;
+        }
+
+        int index = Random.Range(0, quizList.Count);
+
+        QuizData quiz = quizList[index];
+        quizList.RemoveAt(index); // ←これ重要
+
+        currentQuiz = quiz;
+
+        questionText.text = quiz.question;
+
+        for (int i = 0; i < 4; i++)
+        {
+            choiceTexts[i].text = quiz.choices[i];
+        }
+    }
+    public void Answer(int choiceIndex)
+    {
+        /*
+        bool isCorrect = false;
+
+        if (questionNumber <= 3)
+        {
+            isCorrect = (choiceIndex == 1);
+        }
+        else if (questionNumber <= 6)
+        {
+            isCorrect = (choiceIndex == 3);
+        }
+        else
+        {
+            isCorrect = (choiceIndex == currentQuiz.correctAnswer);
+        }
+        */
+        bool isCorrect = choiceIndex == currentQuiz.correctAnswer;
+
+        totalQuestions++;
+
+        quizCanvas.SetActive(false);
+        resultCanvas.SetActive(true);
+
+        if (isCorrect)
+        {
+            correctCount++;
+            resultText.text = "正解！";
+        }
+        else
+        {
+            resultText.text = "不正解！";
+        }
+
+        explanationText.text =
+        currentQuiz.explanation.Replace("|", "\n");
+
+    }
+
+    public void NextQuestion()
+    {
+        quizCanvas.SetActive(true);
+        resultCanvas.SetActive(false);
+        finalCanvas.SetActive(false);
+
+        ShowRandomQuestion();
+    }
+    void ShowFinalResult()
+    {
+        quizCanvas.SetActive(false);
+        resultCanvas.SetActive(false);
+        finalCanvas.SetActive(true);
+
+        float accuracy = (float)correctCount / totalQuestions * 100f;
+
+        finalText.text =
+            $"終了！\n\n正解数：{correctCount}/{totalQuestions}\n正答率：{accuracy:F1}%";
+    }
+    public void Retry()
+    {
+        correctCount = 0;
+        totalQuestions = 0;
+        quizList.Clear();
+        LoadCSV();
+        Shuffle(quizList);
+
+        finalCanvas.SetActive(false);
+        resultCanvas.SetActive(false);
+        quizCanvas.SetActive(true);
+        ShowRandomQuestion();
+    }
+    void LoadCSV()
     {
         csvFile = Resources.Load<TextAsset>("Question");
 
@@ -34,7 +150,6 @@ public class Question : MonoBehaviour
             Debug.LogError("CSVが見つかりません");
             return;
         }
-        Shuffle(quizList);
 
         StringReader reader = new StringReader(csvFile.text);
 
@@ -44,7 +159,6 @@ public class Question : MonoBehaviour
         {
             string line = reader.ReadLine();
 
-            // ヘッダー行をスキップ
             if (isFirstLine)
             {
                 isFirstLine = false;
@@ -68,82 +182,6 @@ public class Question : MonoBehaviour
 
             quizList.Add(quiz);
         }
-
-        ShowRandomQuestion();
-    }
-    void Shuffle(List<QuizData> list)
-    {
-        for (int i = 0; i < list.Count; i++)
-        {
-            int rand = Random.Range(i, list.Count);
-            QuizData temp = list[i];
-            list[i] = list[rand];
-            list[rand] = temp;
-        }
     }
 
-    void ShowRandomQuestion()
-    {
-
-        QuizData quiz = quizList[currentIndex];
-        currentQuiz = quiz;
-        questionText.text = quiz.question;//テキストで変更
-
-        for (int i = 0; i < 4; i++)
-        {
-            choiceTexts[i].text= quiz.choices[i];//テキストなどで変更
-        }
-        currentIndex++;
-    }
-    public void Answer(int choiceIndex)
-    {
-        Debug.Log("Answer呼ばれた");
-        bool isCorrect = choiceIndex == currentQuiz.correctAnswer;
-
-        totalQuestions++;
-
-        quizCanvas.SetActive(false);
-        resultCanvas.SetActive(true);
-        Debug.Log("quizCanvas: " + quizCanvas);
-        Debug.Log("resultCanvas: " + resultCanvas);
-
-        if (isCorrect)
-        {
-            correctCount++;
-            resultText.text = "正解！";
-        }
-        else
-        {
-            resultText.text = "不正解！";
-        }
-
-        explanationText.text =
-        currentQuiz.explanation.Replace("|", "\n");
-
-    }
-
-    public void NextQuestion()
-    {
-        if (currentIndex >= quizList.Count)
-        {
-            ShowFinalResult();
-            return;
-        }
-        quizCanvas.SetActive(true);
-        resultCanvas.SetActive(false);
-        finalCanvas.SetActive(false);
-
-        ShowRandomQuestion();
-    }
-    void ShowFinalResult()
-    {
-        quizCanvas.SetActive(false);
-        resultCanvas.SetActive(false);
-        finalCanvas.SetActive(true);
-
-        float accuracy = (float)correctCount / totalQuestions * 100f;
-
-        finalText.text =
-            $"終了！\n\n正解数：{correctCount}/{totalQuestions}\n正答率：{accuracy:F1}%";
-    }
 }
