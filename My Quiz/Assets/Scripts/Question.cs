@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using System.IO;
 
 public class Question : MonoBehaviour
@@ -7,10 +8,19 @@ public class Question : MonoBehaviour
     TextAsset csvFile;
 
     List<QuizData> quizList = new List<QuizData>();
+    public GameObject quizCanvas;
+    public Button[] choiceButtons;
+    public Text questionText;
+    public Text[] choiceTexts;
+    QuizData currentQuiz;
+    public GameObject resultCanvas;
+
+    public Text resultText;
+    public Text explanationText;
 
     void Start()
     {
-        csvFile = Resources.Load<TextAsset>("QuestionCSV");
+        csvFile = Resources.Load<TextAsset>("Question");
 
         if (csvFile == null)
         {
@@ -46,6 +56,7 @@ public class Question : MonoBehaviour
             quiz.choices[3] = data[4];
 
             quiz.correctAnswer = int.Parse(data[5]);
+            quiz.explanation = data[6];
 
             quizList.Add(quiz);
         }
@@ -59,13 +70,43 @@ public class Question : MonoBehaviour
 
         QuizData quiz = quizList[index];
 
-        Debug.Log(quiz.question);//テキストで変更
+        currentQuiz = quiz;
+        questionText.text = quiz.question;//テキストで変更
 
         for (int i = 0; i < 4; i++)
         {
-            Debug.Log($"{i + 1}: {quiz.choices[i]}");//テキストなどで変更
+            choiceTexts[i].text= quiz.choices[i];//テキストなどで変更
+        }
+    }
+    public void Answer(int choiceIndex)
+    {
+        Debug.Log("Answer呼ばれた");
+        bool isCorrect = choiceIndex == currentQuiz.correctAnswer;
+
+        quizCanvas.SetActive(false);
+        resultCanvas.SetActive(true);
+        Debug.Log("quizCanvas: " + quizCanvas);
+        Debug.Log("resultCanvas: " + resultCanvas);
+
+        if (isCorrect)
+        {
+            resultText.text = "正解！";
+        }
+        else
+        {
+            resultText.text = "不正解！";
         }
 
-        Debug.Log($"正解は {quiz.correctAnswer}");//テキストで変更
+        explanationText.text =
+        currentQuiz.explanation.Replace("|", "\n");
+
+    }
+
+    public void NextQuestion()
+    {
+        quizCanvas.SetActive(true);
+        resultCanvas.SetActive(false);
+
+        ShowRandomQuestion();
     }
 }
